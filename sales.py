@@ -8,7 +8,7 @@ from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 
 # ========== STEP 1: DATA LOADING ==========
-@st.cache
+@st.cache_data
 def load_data():
     sales_data = pd.read_csv("prediction.csv", parse_dates=["Date"])
     sales_data["Month"] = sales_data["Date"].dt.to_period("M")
@@ -35,7 +35,7 @@ st.write("Analyze historical trends, forecast future sales, and understand custo
 
 # ========== STEP 4: HISTORICAL SALES ==========
 st.header("1. Historical Sales Trends")
-sales_trend = filtered_data.groupby("Date").sum()["Total"].reset_index()
+sales_trend = filtered_data.groupby(filtered_data["Date"].dt.date).sum()["Total"].reset_index()
 fig = px.line(sales_trend, x="Date", y="Total", title="Sales Over Time", labels={"Total": "Total Sales"})
 st.plotly_chart(fig)
 
