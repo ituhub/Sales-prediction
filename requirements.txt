@@ -2,4 +2,8 @@ streamlit
 pandas
 plotly
 statsmodels
-prophet
+fbprophet
+matplotlib
+numpy
+scikit-learn
+
