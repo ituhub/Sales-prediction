@@ -35,7 +35,8 @@ st.write("Analyze historical trends, forecast future sales, and understand custo
 
 # ========== STEP 4: HISTORICAL SALES ==========
 st.header("1. Historical Sales Trends")
-sales_trend = filtered_data.groupby(filtered_data["Date"].dt.date).sum()["Total"].reset_index()
+# Fix: Specify only the 'Total' column to sum to avoid summing datetime columns
+sales_trend = filtered_data.groupby(filtered_data["Date"].dt.date)['Total'].sum().reset_index()
 fig = px.line(sales_trend, x="Date", y="Total", title="Sales Over Time", labels={"Total": "Total Sales"})
 st.plotly_chart(fig)
 
@@ -56,6 +57,7 @@ arima_forecast_df = pd.DataFrame({
 
 # Forecast with Prophet
 prophet_data = sales_trend.rename(columns={"Date": "ds", "Total": "y"})
+prophet_data['ds'] = pd.to_datetime(prophet_data['ds'])  # Ensure 'ds' is datetime
 prophet_model = Prophet()
 prophet_model.fit(prophet_data)
 future = prophet_model.make_future_dataframe(periods=30)
@@ -73,6 +75,8 @@ st.header("3. Customer Behavior Insights")
 
 # Customer Segmentation (RFM Analysis)
 st.subheader("1. Customer Segmentation")
+# Ensure 'Date' column is in datetime format
+sales_data['Date'] = pd.to_datetime(sales_data['Date'])
 rfm_data = sales_data.groupby("Customer type").agg({
     "Date": lambda x: (sales_data["Date"].max() - x.max()).days,
     "Invoice ID": "count",
@@ -106,7 +110,7 @@ st.plotly_chart(fig_patterns)
 
 # Churn Analysis
 st.subheader("3. Churn Analysis")
-avg_purchase_gap = sales_data.groupby("CustomerID")["Date"].apply(lambda x: x.diff().mean()).dt.days
+avg_purchase_gap = sales_data.groupby("CustomerID")["Date"].apply(lambda x: x.sort_values().diff().mean()).dt.days
 churn_customers = avg_purchase_gap[avg_purchase_gap > 30].count()
 
 st.write(f"**At-Risk Customers:** {churn_customers} customers have an average purchase gap of over 30 days.")
@@ -114,7 +118,7 @@ st.write(f"**At-Risk Customers:** {churn_customers} customers have an average pu
 # ========== STEP 7: INSIGHTS ==========
 st.header("4. Insights and Recommendations")
 st.write("""
-- **Top Products**: Focus on promoting [Product Line X].
+- **Top Products**: Focus on promoting strong-performing product lines.
 - **Customer Retention**: Offer loyalty programs to VIP customers and re-engage at-risk customers with targeted campaigns.
 - **Inventory Optimization**: Stock products based on predicted demand using the Prophet model.
 - **Action Plan**: Leverage insights to drive strategic decision-making.
