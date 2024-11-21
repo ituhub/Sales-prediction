@@ -4,7 +4,6 @@ import numpy as np
 import plotly.express as px
 from statsmodels.tsa.arima.model import ARIMA
 from prophet import Prophet
-from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 
 # ========== STEP 1: DATA LOADING ==========
@@ -110,10 +109,25 @@ st.plotly_chart(fig_patterns)
 
 # Churn Analysis
 st.subheader("3. Churn Analysis")
-avg_purchase_gap = sales_data.groupby("CustomerID")["Date"].apply(lambda x: x.sort_values().diff().mean()).dt.days
-churn_customers = avg_purchase_gap[avg_purchase_gap > 30].count()
 
-st.write(f"**At-Risk Customers:** {churn_customers} customers have an average purchase gap of over 30 days.")
+# Since 'CustomerID' is not available, we'll use 'Customer type' for analysis
+# Calculate the average purchase gap per 'Customer type'
+avg_purchase_gap = sales_data.groupby('Customer type')['Date'].apply(lambda x: x.sort_values().diff().mean())
+
+# Convert Timedelta to days
+avg_purchase_gap = avg_purchase_gap.dt.days
+
+# Identify 'Customer type' with average purchase gap over 30 days
+churn_types = avg_purchase_gap[avg_purchase_gap > 30]
+
+# Display the results
+if not churn_types.empty:
+    st.write("**At-Risk Customer Types:**")
+    for customer_type in churn_types.index:
+        gap = avg_purchase_gap[customer_type]
+        st.write(f"- {customer_type}: Average purchase gap of {gap:.2f} days.")
+else:
+    st.write("No customer types with an average purchase gap over 30 days.")
 
 # ========== STEP 7: INSIGHTS ==========
 st.header("4. Insights and Recommendations")
